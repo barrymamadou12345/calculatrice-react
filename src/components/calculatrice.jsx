@@ -38,20 +38,24 @@ class Calculatrice extends React.Component {
     }
   };
 
-  inputDigit(digit) {
+  inputDigit(saisi) {
     const { display, waitingForOperand, showEquals } = this.state;
+    const maxLength = 16;
     if (waitingForOperand || showEquals) {
       this.setState({
-        display: String(digit),
+        display: String(saisi),
         waitingForOperand: false,
         showOperator: false,
         showEquals: false,
       });
     } else {
-      this.setState({
-        display: display === "0" ? String(digit) : display + digit,
-        showOperator: false,
-      });
+      const newDisplay = display === "0" ? String(saisi) : display + saisi;
+      if (newDisplay.length <= maxLength) {
+        this.setState({
+          display: newDisplay,
+          showOperator: false,
+        });
+      }
     }
   }
 
@@ -96,13 +100,21 @@ class Calculatrice extends React.Component {
         showOperator: true,
         showEquals: false,
       });
-    } else if (operator) {
+    } else if (operator && !this.state.waitingForOperand) {
       const currentValue = previousValue || 0;
       const newValue = this.calculate(currentValue, inputValue, operator);
 
       this.setState({
         display: String(newValue),
         previousValue: newValue,
+        waitingForOperand: true,
+        operator: nextOperator,
+        showOperator: nextOperator !== "=",
+        showEquals: nextOperator === "=",
+      });
+    } else {
+      this.setState({
+        display: String(previousValue),
         waitingForOperand: true,
         operator: nextOperator,
         showOperator: nextOperator !== "=",
@@ -131,7 +143,7 @@ class Calculatrice extends React.Component {
     let displayValue;
 
     if (showEquals) {
-      displayValue = `=${display}`; // Afficher = avant le nombre
+      displayValue = `= ${display}`;
     } else if (showOperator) {
       displayValue = `${display} ${operator}`; // Afficher le nombre suivi de l'opérateur
     } else {
@@ -146,7 +158,6 @@ class Calculatrice extends React.Component {
         </div>
         {/* Grille de boutons */}
         <div className="grid grid-cols-4 ps-4 gap-1">
-
           <BoutonCalcul
             label="C"
             onClick={() => this.clearAll()}
@@ -191,7 +202,6 @@ class Calculatrice extends React.Component {
             onClick={() => this.performOperation("+")}
             className="bg-orange-500"
           />
-
         </div>
       </div>
     );
